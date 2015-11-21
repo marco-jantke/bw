@@ -5,8 +5,7 @@
            [clojure.data.json :as json]))
 
 (def weekday-formatter (timeformat/formatter "EEEE"))
-(def hour-minute-formatter (timeformat/formatter "HHmm"))
-(def hour-formatter (timeformat/formatter "H"))
+(def hour-minute-formatter (timeformat/formatter "Hmm"))
 
 (defn extract-line-info [^String line]
   (let [[timestamp datestring status] (clojure.string/split line #",")]
@@ -22,9 +21,8 @@
     "Thursday" 4 "Friday" 5 "Saturday" 6 "Sunday" 7))
 
 (defn in-opening-hours? [line-info]
-  (let [hour (read-string (format-date line-info hour-formatter))]
-    (and (> hour 8
-) (< hour 24))))
+  (let [hm (read-string (format-date line-info hour-minute-formatter))]
+    (and (> hm 659) (< hm 2301))))
 
 (defn avg-status [entries]
   (->> (float (/ (apply + (map :status entries)) (count entries)))
@@ -40,7 +38,8 @@
   {:weekday weekday
    :entries (->> (filter in-opening-hours? entries)
                  (group-by #(format-date % hour-minute-formatter))
-                 (map summarize-hour-minute-status))
+                 (map summarize-hour-minute-status)
+                 (sort-by #(read-string (:hour-minute %))))
    :avg-status (avg-status entries)
    :count-entries (count entries)})
 

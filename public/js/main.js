@@ -4,19 +4,20 @@ function resizeChartByWindowSize() {
 
 function buildSeriesByResponseData(data) {
     var series = [];
+    var categories = [];
 
     $.each(data, function (index, weekday) {
         var points = [];
 
         $.each(weekday.entries, function (index, hourminute) {
-            points.push([
-                parseInt(hourminute['hour-minute'], 10),
-                hourminute['avg-status']
-            ]);
-        });
+            var hm = hourminute['hour-minute'];
+            var category = hm.length === 3 ? '0' + hm : hm;
 
-        points.sort(function (a, b) {
-            return a[0] - b[0];
+            if (categories.indexOf(category) === -1) {
+                categories.push(category);
+            }
+
+            points.push(hourminute['avg-status']);
         });
 
         series.push({
@@ -25,7 +26,10 @@ function buildSeriesByResponseData(data) {
         });
     });
 
-    return series;
+    return {
+        series: series,
+        categories: categories
+    };
 }
 
 $(function () {
@@ -34,6 +38,10 @@ $(function () {
 
     $.ajax('output.json', {
         success: function (data) {
+            var seriesData = buildSeriesByResponseData(data);
+
+            debugger;
+
             $('#chart').highcharts({
                 chart: {
                     type: 'line'
@@ -44,7 +52,10 @@ $(function () {
                 tooltip: {
                     shared: true
                 },
-                series: buildSeriesByResponseData(data)
+                xAxis: {
+                    categories: seriesData.categories
+                },
+                series: seriesData.series
             });
         }
     });
