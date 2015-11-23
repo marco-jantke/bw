@@ -254,13 +254,8 @@ function buildSeriesByResponseData(data) {
     };
 }
 
-$(function () {
-    loadDarkTheme();
-
-    resizeChartByWindowSize();
-    $(window).on('resize', resizeChartByWindowSize);
-
-    $.ajax('output.json', {
+function loadChartByFile(fileName) {
+    $.ajax(fileName, {
         success: function (data) {
             var seriesData = buildSeriesByResponseData(data);
 
@@ -287,10 +282,54 @@ $(function () {
                 yAxis: {
                     title: {
                         text: 'Auslastung'
-                    }
+                    },
+                    max: 5
                 },
                 series: seriesData.series
             });
         }
     });
+}
+
+function buildNavigation() {
+    var navigationPoints = [{ fileName: 'output.json', label: 'Since data recording' }],
+        monthMapping = {
+            1: 'January',
+            2: 'February',
+            3: 'March',
+            4: 'April',
+            5: 'May',
+            6: 'June',
+            7: 'July',
+            8: 'August',
+            9: 'September',
+            10: 'October',
+            11: 'November',
+            12: 'December'
+        };
+
+    for (var month = 1; month < 13; month++) {
+        navigationPoints.push({ fileName: 'month-history-' + month + '.json', label: monthMapping[month] });
+    }
+
+    $.each(navigationPoints, function (index, navigationPoint) {
+        var navElement = $('<li class="nav"><a href="#">' + navigationPoint.label + '</a></li>');
+
+        navElement.click(function () {
+            loadChartByFile(navigationPoint.fileName);
+        });
+
+        $('#navigation').append(navElement);
+    })
+}
+
+$(function () {
+    loadDarkTheme();
+    //resizeChartByWindowSize();
+
+    //$(window).on('resize', resizeChartByWindowSize);
+
+    buildNavigation();
+
+    loadChartByFile('complete-history.json');
 });
